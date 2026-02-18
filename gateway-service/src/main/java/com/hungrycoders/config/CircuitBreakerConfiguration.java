@@ -24,14 +24,16 @@ public class CircuitBreakerConfiguration {
 
         // Configure TimeLimiter
         TimeLimiterConfig timeLimiterConfig = TimeLimiterConfig.custom()
-                .timeoutDuration(Duration.ofSeconds(4)) // Timeout for API calls
+                .timeoutDuration(Duration.ofSeconds(30)) // Timeout for API calls
                 .build();
 
         // Configure CircuitBreaker
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
                 .failureRateThreshold(50) // Threshold for failure rate to trip the breaker
-                .waitDurationInOpenState(Duration.ofMillis(1000)) // Wait time in OPEN state
-                .slidingWindowSize(2) // Number of calls in the window
+                .waitDurationInOpenState(Duration.ofMillis(10000)) // Wait time in OPEN state
+                .slidingWindowSize(10) // Number of calls in the window
+                .minimumNumberOfCalls(5)
+                .permittedNumberOfCallsInHalfOpenState(3)
                 .build();
 
         // Apply configurations globally

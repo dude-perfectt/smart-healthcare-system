@@ -37,16 +37,15 @@ const AuthProvider = ({ children }: any) => {
   const [userRole, setUserRole] = useState(safeGetItem("userRole"));
   const navigate = useNavigate();
 
-  // Fetch user details if token and auth exist or token changes
+  // Fetch user details if token and auth exist or token changes.
+  // Role is read from localStorage (not state) because setState is async
+  // and userRole state may not be updated yet when this effect fires.
   useEffect(() => {
     if (token && auth) {
-      if (typeof auth === "string") {
-        const parsedAuth = safeJsonParse(auth);
-        if (parsedAuth?.email) {
-          fetchUser(parsedAuth.email);
-        }
-      } else if (typeof auth === "object" && auth?.email) {
-        fetchUser(auth.email);
+      const parsedAuth = typeof auth === "string" ? safeJsonParse(auth) : auth;
+      const role = safeGetItem("userRole"); // read from localStorage, not state
+      if (parsedAuth?.email && role) {
+        fetchUser(parsedAuth.email, role);
       }
     }
   }, [token]);
@@ -56,40 +55,41 @@ const AuthProvider = ({ children }: any) => {
     setNavigate(navigate);
   }, [navigate]);
 
-  // Fetch user details based on role and save it to state and local storage for furthur use.
-  const fetchUser = async (email: string) => {
+  // Fetch user details based on role and save it to state and local storage for further use.
+  // Role is passed as a parameter to avoid stale closure issue with userRole state.
+  const fetchUser = async (email: string, role: string) => {
     try {
-      if (userRole === "ROLE_DOCTOR") {
-        getDoctorByEmail(email).then((res) => {
-          setUser(res?.data?.data);
-          localStorage.setItem("user", JSON.stringify(res?.data?.data));
-          navigate("/");
-        });
-      } else if (userRole === "ROLE_PATIENT") {
-        getPatientByEmail(email).then((res) => {
-          setUser(res?.data?.data);
-          localStorage.setItem("user", JSON.stringify(res?.data?.data));
-          navigate("/");
-        });
+      if (role === "ROLE_DOCTOR") {
+        const res = await getDoctorByEmail(email);
+        setUser(res?.data?.data);
+        localStorage.setItem("user", JSON.stringify(res?.data?.data));
+        navigate("/");
+      } else if (role === "ROLE_PATIENT") {
+        const res = await getPatientByEmail(email);
+        setUser(res?.data?.data);
+        localStorage.setItem("user", JSON.stringify(res?.data?.data));
+        navigate("/");
       }
     } catch (e) {
       console.log(e);
     }
   };
 
-  // Login function to set user session states, store in localstorage and navigate to home screen.
+  // Login function to set user session states, store in localStorage and navigate to home screen.
+  // localStorage is set BEFORE setState so that when setToken triggers the useEffect,
+  // the role is already available in localStorage for fetchUser to read.
   const login = (res: any) => {
-    setUserRole(res.roles[0]);
-    setToken(res.token);
-    setAuth(res);
-    fetchUser(res?.email);
-    localStorage.setItem("jwt", res.token);
+    localStorage.setItem("jwt", res.token);           // set FIRST
     localStorage.setItem("auth", JSON.stringify(res));
     localStorage.setItem("userRole", res.roles[0]);
+    setUserRole(res.roles[0]);
+    setAuth(res);
+    setToken(res.token); // triggers useEffect which calls fetchUser once
     if (res.roles[0] === "ROLE_ADMIN") navigate("/");
+    // fetchUser is NOT called here — useEffect handles it to avoid double calls
   };
 
-  // Logout function to update states and delete details stored in localstorage (navigate back to login screen)
+  // Logout function to update states and delete details stored in localStorage
   const logout = () => {
     setToken(null);
     setUser(null);
@@ -103,7 +103,6 @@ const AuthProvider = ({ children }: any) => {
 
   return (
     <AuthContext.Provider
-      // Drilling down the values to child components
       value={{
         user: typeof user === "string" ? safeJsonParse(user) : user,
         token,

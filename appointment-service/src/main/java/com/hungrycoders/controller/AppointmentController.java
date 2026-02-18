@@ -17,7 +17,6 @@ import java.util.List;
  * updating, and retrieving appointments based on criteria.
  */
 @RestController
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequestMapping("/api/v1/appointments")
 public class AppointmentController {
 

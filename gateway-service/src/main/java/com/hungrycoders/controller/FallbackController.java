@@ -1,6 +1,7 @@
 package com.hungrycoders.controller;
 
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -8,23 +9,31 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/fallback")
 public class FallbackController {
 
-    @GetMapping("/doctor")
-    public String doctorFallback() {
-        return "Doctor Service is temporarily unavailable. Please try again later.";
+    @RequestMapping("/doctor")
+    public ResponseEntity<String> doctorFallback() {
+        return ResponseEntity
+                .status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body("Doctor Service is temporarily unavailable. Please try again later.");
     }
 
-    @GetMapping("/patient")
-    public String patientFallback() {
-        return "Patient Service is temporarily unavailable. Please try again later.";
+    @RequestMapping("/patient")
+    public ResponseEntity<String> patientFallback() {
+        return ResponseEntity
+                .status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body("Patient Service is temporarily unavailable. Please try again later.");
     }
 
-    @GetMapping("/appointment")
-    public String appointmentFallback() {
-        return "Appointment Service is temporarily unavailable. Please try again later.";
+    @RequestMapping("/appointment")
+    public ResponseEntity<String> appointmentFallback() {
+        return ResponseEntity
+                .status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body("Appointment Service is temporarily unavailable. Please try again later.");
     }
 
-    @GetMapping("/auth")
-    public String authFallback() {
-        return "Authentication Service is temporarily unavailable. Please try again later.";
+    @RequestMapping("/auth")
+    public ResponseEntity<String> authFallback() {
+        return ResponseEntity
+                .status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body("Authentication Service is temporarily unavailable. Please try again later.");
     }
 }

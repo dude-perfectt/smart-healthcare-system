@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Set;
 import java.util.function.Predicate;
+import org.springframework.http.HttpMethod;
 
 @Component // Marks this class as a Spring-managed component for dependency injection
 public class RouterValidator {
@@ -13,7 +14,7 @@ public class RouterValidator {
      * A set of endpoints that are publicly accessible and do not require authentication.
      */
     public static final Set<String> openApiEndpoints = Set.of(
-            "api/auth/register",
+            "api/auth/signup",
             "api/auth/signin"// Add more public endpoints as needed
     );
 
@@ -25,5 +26,6 @@ public class RouterValidator {
      */
     public Predicate<ServerHttpRequest> isSecured = request ->
             openApiEndpoints.stream()
-                    .noneMatch(uri -> request.getURI().getPath().contains(uri));
+                    .noneMatch(uri -> request.getURI().getPath().contains(uri))
+            && !request.getMethod().equals(HttpMethod.OPTIONS);
 }

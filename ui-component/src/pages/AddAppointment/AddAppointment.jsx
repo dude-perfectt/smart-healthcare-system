@@ -9,6 +9,7 @@ const AddAppointment = () => {
 	const { setShowSpinner } = useContext(spinnerContext);
 	const [doctors, setDoctors] = useState([]); // State to store available doctors
 	const [currentTime, setCurrentTime] = useState(Date.now()); // Current timestamp for appointment validation
+	const [isSubmitting, setIsSubmitting] = useState(false); // Prevent duplicate submissions
 	const { user } = useContext(AuthContext); // Accessing user context for patient info
 
 	// Initial appointment state to store form data
@@ -45,8 +46,14 @@ const AddAppointment = () => {
 	}, []);
 
 	// Handle form submission to add appointment
-	const handleSubmit = (e) => {
+	const handleSubmit = async (e) => {
 		e.preventDefault();
+		
+		// Prevent duplicate submissions
+		if (isSubmitting) {
+			return;
+		}
+		
 		if (doctors.length === 0) {
 			// If no doctors are available, show an alert
 			Swal.fire({
@@ -57,32 +64,40 @@ const AddAppointment = () => {
 			return;
 		}
 
+		setIsSubmitting(true);
+		
 		// Prepare the appointment data to be submitted
-		const appointmentTemp = appointment;
+		const appointmentTemp = { ...appointment }; // Create a copy to avoid mutation
 		appointmentTemp.patientId = user?.id;
 		setShowSpinner(true);
-		// Make API call to add the appointment
-		addAppointment(appointmentTemp)
-			.then((res) => {
-				setShowSpinner(false);
-				if (res.status === 200) {
-					// Show success alert if appointment is added successfully
-					Swal.fire({
-						title: "Success",
-						text: "Appointment added",
-						icon: "info",
-					});
-				}
-				handleReset(); // Reset form fields after submission
-			})
-			.catch((e) => {
-				setShowSpinner(false);
+		
+		try {
+			// Make API call to add the appointment
+			const res = await addAppointment(appointmentTemp);
+			setShowSpinner(false);
+			
+			if (res.status === 200) {
+				// Show success alert if appointment is added successfully
 				Swal.fire({
-					title: "Failed",
-					text: "Error encountered",
-					icon: "error",
+					title: "Success",
+					text: "Appointment added",
+					icon: "success",
 				});
+				handleReset(); // Reset form fields after submission
+			} else {
+				throw new Error(`Unexpected status code: ${res.status}`);
+			}
+		} catch (error) {
+			setShowSpinner(false);
+			console.error("Error adding appointment:", error);
+			Swal.fire({
+				title: "Failed",
+				text: error.response?.data?.message || "Error encountered while adding appointment",
+				icon: "error",
 			});
+		} finally {
+			setIsSubmitting(false);
+		}
 	};
 
 	// Reset the appointment form fields to initial state
@@ -136,10 +151,10 @@ const AddAppointment = () => {
 						<input required value={appointment.notes} onChange={handleChange} type="text" className="form-control" id="notes" />
 					</div>
 					<div className="my-4 d-flex">
-						<button className="btn btn-primary" type="submit">
-							Submit
+						<button className="btn btn-primary" type="submit" disabled={isSubmitting}>
+							{isSubmitting ? "Submitting..." : "Submit"}
 						</button>
-						<button className="btn btn-danger mx-2" type="reset">
+						<button className="btn btn-danger mx-2" type="reset" disabled={isSubmitting}>
 							Reset
 						</button>
 					</div>

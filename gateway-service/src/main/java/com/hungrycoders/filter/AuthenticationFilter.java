@@ -2,6 +2,8 @@ package com.hungrycoders.filter;
 
 import com.hungrycoders.config.JwtUtil;
 import com.hungrycoders.config.RouterValidator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
@@ -16,6 +18,8 @@ import reactor.core.publisher.Mono;
 @RefreshScope // Allows dynamic reloading of properties for this component
 @Component // Marks this filter as a Spring-managed component
 public class AuthenticationFilter implements GatewayFilter {
+
+    private static final Logger logger = LoggerFactory.getLogger(AuthenticationFilter.class);
 
     private final RouterValidator routerValidator;
     private final JwtUtil jwtUtil;
@@ -36,24 +40,29 @@ public class AuthenticationFilter implements GatewayFilter {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
+        
+        // Log request details for debugging
+        logger.info("Incoming request: {} {}", request.getMethod(), request.getURI().getPath());
+        logger.info("Request headers: {}", request.getHeaders());
 
-        System.out.println(request);
         // Check if the request path requires authentication
         if (routerValidator.isSecured.test(request)) {
             if (isAuthMissing(request)) {
+                logger.warn("Authorization header missing for request: {}", request.getURI().getPath());
                 return onError(exchange, HttpStatus.UNAUTHORIZED, "Authorization header is missing.");
             }
 
             final String token = getAuthHeader(request);
 
             if (jwtUtil.isInvalid(token)) {
+                logger.warn("Invalid token for request: {}", request.getURI().getPath());
                 return onError(exchange, HttpStatus.FORBIDDEN, "Invalid or expired token.");
             }
 
-            updateRequest(exchange, token);
+            exchange = updateRequest(exchange, token);
         }
 
-        System.out.println("forwarding the request");
+        logger.info("Forwarding request: {}", request.getURI().getPath());
         return chain.filter(exchange); // Forward the request if valid
     }
 
@@ -79,9 +88,13 @@ public class AuthenticationFilter implements GatewayFilter {
      * @return the JWT token as a string.
      */
     private String getAuthHeader(ServerHttpRequest request) {
-        return request.getHeaders().getOrEmpty("Authorization").stream()
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Missing Authorization header"));
+        String authHeader = request.getHeaders().getFirst("Authorization");
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new IllegalArgumentException("Invalid Authorization header");
+        }
+
+        return authHeader.substring(7); // Remove "Bearer "
     }
 
     /**
@@ -100,10 +113,13 @@ public class AuthenticationFilter implements GatewayFilter {
      * @param exchange the current server exchange.
      * @param token    the JWT token.
      */
-    private void updateRequest(ServerWebExchange exchange, String token) {
+    private ServerWebExchange updateRequest(ServerWebExchange exchange, String token) {
         String email = jwtUtil.getAllClaimsFromToken(token).get("email", String.class);
-        exchange.getRequest().mutate()
+        ServerHttpRequest modifiedRequest = exchange.getRequest().mutate()
                 .header("email", email) // Add the email claim to the request headers
+                .build();
+        return exchange.mutate()
+                .request(modifiedRequest)
                 .build();
     }
 }

@@ -9,6 +9,9 @@ const Login = () => {
   const [userName, setUserName] = useState("");
   const [password, setPassword] = useState("");
 
+  // Prevents double submission if user clicks login button multiple times
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   // Accessing login function from AuthContext
   const { login } = useContext<any>(AuthContext);
 
@@ -18,21 +21,17 @@ const Login = () => {
   // Handle form submission when user tries to log in
   const handleSubmit = async (e: any) => {
     e.preventDefault();
+    if (isSubmitting) return; // guard against double clicks
+    setIsSubmitting(true);
     try {
       setShowSpinner(true);
-      // Attempt to sign in with the provided username and password
-      signIn(userName, password)
-        .then((response) => {
-          setShowSpinner(false);
-          login(response.data);
-        })
-        .catch((err) => {
-          setShowSpinner(false);
-          navigateTo("/login");
-        });
+      const response = await signIn(userName, password);
+      login(response.data);
     } catch (error) {
-      setShowSpinner(false);
       navigateTo("/login");
+    } finally {
+      setShowSpinner(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -76,8 +75,12 @@ const Login = () => {
                       required
                     />
                   </div>
-                  <button type="submit" className="btn btn-dark w-100">
-                    Login
+                  <button
+                    type="submit"
+                    className="btn btn-dark w-100"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? "Logging in..." : "Login"}
                   </button>
                 </form>
               </div>

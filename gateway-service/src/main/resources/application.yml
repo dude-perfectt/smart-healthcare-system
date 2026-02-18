@@ -2,18 +2,19 @@ spring:
   cloud:
     gateway:
       globalcors:
-        corsConfigurations:
+        cors-Configurations:
           '[/**]': # Apply to all routes
             allowedOrigins:
-              - http://localhost:9090 # Your React frontend
-              - http://localhost:5173
+              - http://localhost:9090
             allowedMethods:
               - GET
               - POST
               - PUT
+              - PATCH
               - DELETE
               - OPTIONS
-            allowedHeaders: "*"
+            allowedHeaders:
+            - "*"
             allowCredentials: true
 
   application:
@@ -35,6 +36,8 @@ spring:
   logging:
     level:
       org.springframework.cloud.gateway: DEBUG
+      io.github.resilience4j: DEBUG
+      reactor.netty: DEBUG
 
 management:
   endpoints:

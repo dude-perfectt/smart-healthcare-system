@@ -49,19 +49,19 @@ public class DataInitializer {
             if (!mongoTemplate.collectionExists("users")) {
                 SignupRequest adminUser = new SignupRequest(
                         "admin",
-                        "noreplyhungrycoders@gmail.com",
+                        "admin@gmail.com",
                         new HashSet<>(List.of("admin")),
                         "admin123"
                 );
                 SignupRequest doctorUser = new SignupRequest(
                         "doctor",
-                        "doctorhungrycoders@gmail.com",
+                        "doctor@gmail.com",
                         new HashSet<>(List.of("doctor")),
                         "doctor123"
                 );
                 SignupRequest patientUser = new SignupRequest(
                         "patient",
-                        "patienthungrycoders@gmail.com",
+                        "patient@gmail.com",
                         new HashSet<>(List.of("patient")),
                         "patient123"
                 );
@@ -78,7 +78,7 @@ public class DataInitializer {
                 Document doctor = new Document()
                         .append("firstName", "Sample")
                         .append("lastName", "Doctor")
-                        .append("email", "doctorhungrycoders@gmail.com")
+                        .append("email", "doctor@gmail.com")
                         .append("phone", "123456789")
                         .append("speciality", "Gynic, General Medicine")
                         .append("yearsOfExperience", 4)
@@ -95,7 +95,7 @@ public class DataInitializer {
                 Document patient = new Document()
                         .append("firstName", "Sample")
                         .append("lastName", "Patient")
-                        .append("email", "patienthungrycoders@gmail.com")
+                        .append("email", "patient@gmail.com")
                         .append("phone", "123456789")
                         .append("age", 30)
                         .append("_id", UUID.randomUUID().toString());

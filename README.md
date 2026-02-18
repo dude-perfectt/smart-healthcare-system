@@ -2,8 +2,6 @@
 
 A production-ready **Healthcare Microservices System** built with **Spring Boot 3**, **Apache Kafka**, **MongoDB**, **React**, and **Docker**. This project is designed for self-learning and interview preparation, demonstrating real-world microservices patterns used at top tech companies.
 
-> **Course**: HungryCoders - Java & Spring Boot Masterclass  
-> **License**: Available only for paid HungryCoders course users
 
 ---
 
@@ -980,15 +978,3 @@ This project covers the following commonly asked interview topics:
 7. **Add Kubernetes Deployment** - Container orchestration at scale
 
 ---
-
-## Support
-
-For questions or issues related to this project:
-- **Course Platform**: HungryCoders
-- **Instagram**: @codingwithaman
-
----
-
-**Happy Learning! 🚀**
-
-*Built with ❤️ by HungryCoders*

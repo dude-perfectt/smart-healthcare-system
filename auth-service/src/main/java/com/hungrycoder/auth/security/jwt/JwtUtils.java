@@ -51,6 +51,7 @@ public class JwtUtils {
     return Jwts.builder()
             .setSubject((userPrincipal.getUsername())) // Set the subject (username)
             .claim("role", role)
+            .claim("email", userPrincipal.getEmail())
             .setIssuedAt(new Date()) // Set the issue date
             .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs)) // Set the expiration date
             .signWith(key(), SignatureAlgorithm.HS256)
