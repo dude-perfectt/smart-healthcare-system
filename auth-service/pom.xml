@@ -12,7 +12,7 @@
 	</parent>
 
 	<!-- Project coordinates -->
-	<groupId>com.hungrycoder</groupId>
+	<groupId>com.swastik</groupId>
 	<artifactId>auth-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>Auth Service</name>
